@@ -83,6 +83,9 @@ class Goban(object):
                 else:
                     self.map[i][j] = 1 if not self.turn else 2
                     self.turn = not self.turn
+                    self.update_score()
+                    disp_info("Score: Black " + str(self.game.scoring[1]) + \
+                    " White " + str(self.game.scoring[2]))
             else:
                 pass
 #
@@ -174,6 +177,15 @@ recreate the board that followed your previous move")
             chain.stones, chain.getlib())
             print DISPSEP
 #
+    def update_score(self):
+        """ update the current game score """
+#       livestones[0] is not used, [1] is for black, [2] is for white
+        livestones = [0, 0, 0]
+        for chain in self.chainlist:
+            if chain.is_alive():
+                livestones[chain.player] += chain.stones
+        self.game.set_score(livestones)
+#
 class Gbview(object):
     """ class used in Goban objects to store variables relative to the display """
 #
@@ -209,12 +221,17 @@ class Chain(object):
             self.player = 0
         self.idn = counter
         self.stones = 1
+        self.alive = True
         self.coords = [(i, j),]
 #       determine where the liberties are if not chain-zero
         if self.player:
             self.setlib()
         else:
             self.liberties = list()
+#
+    def is_alive(self):
+        """ return the chain status (score related)  """
+        return self.alive
 #
     def getlib(self):
         """ return the number of liberties """
@@ -299,6 +316,7 @@ class Gosequence(object):
         self.passed = bool(0)
         self.singlecaptured = None
         self.lastplayed = None
+        self.scoring = [0, 0, 0]
 #
     def is_passed(self):
         """ check on the "passed" attribute """
@@ -331,6 +349,10 @@ class Gosequence(object):
         if self.lastplayed != currentmove:
             self.singlecaptured = None
             self.lastplayed = None
+#
+    def set_score(self, livestones):
+        """ set the score of both players on the current goban """
+        self.scoring = livestones
 #
 class GoLibError(Exception):
     """ specific errors to be raised within the lib """
